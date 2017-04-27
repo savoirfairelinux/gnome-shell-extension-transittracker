@@ -66,3 +66,7 @@ function enable() {
 function disable() {
     Main.panel._rightBox.remove_child(button);
 }
+
+function log_message(message) {
+    global.log('[transitTracker@vinibo.net] : ' + message);
+}

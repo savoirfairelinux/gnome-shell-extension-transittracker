@@ -7,8 +7,11 @@ const BUS_CAN_QUE_RTC_URL = "https://wsmobile.rtcquebec.ca/api/v1/horaire/BorneV
 
 const RTC_LINE_PARAMETER = "noParcours";
 const RTC_STOP_PARAMETER = "noArret";
-const RTC_DIRECTION_PARAMETER = "noDirection";
+const RTC_DIRECTION_PARAMETER = "codeDirection";
+const RTC_SOURCE_PARAMETER = "source"
 
+const RTC_LINE_KEY = "parcours";
+const RTC_STOP_KEY = "arret";
 const RTC_NOT_DESERVED_KEY = "arretNonDesservi";
 const RTC_SCHEDULE_KEY = "horaires";
 const RTC_ESTIMATED_TIME = "departMinutes";
@@ -25,38 +28,48 @@ function getEstimatedTime(line, direction, stop) {
 }
 
 function getData(line, direction, stop) {
-    // TODO:URL is partial here!
-    let request = Soup.Message.new('GET', BUS_CAN_QUE_RTC_URL);
-    //_session.queue_message(request, Lang.bind(this,get_callback(session, message)));
+    url = build_url(line, direction, stop);
+    let request = Soup.Message.new('GET', url);
+    _session.queue_message(request, Lang.bind(this,get_callback));
 
-    return 'N/A';
-    //this.load_json_async(BUS_CAN_QUE_RTC_URL, params, function(json) {
-    //        if (json && (Number(json.cod) == 200)) {
+    if (transit_infos != null) {
+        return transit_infos.estimated_time;
+    } else {
+        return 'N/A';
+    }
+}
 
-    //            if (this.currentBusCache != json)
-    //                this.currentBusCache = json;
+function build_url(line, direction, stop) {
+    let url = BUS_CAN_QUE_RTC_URL + '?'
+            // I tried to be honnest by sending the extension name, but the request got rejected
+            + RTC_SOURCE_PARAMETER + '=' + 'siteMobile' + '&'
+            + RTC_LINE_PARAMETER + '=' + line + '&'
+            + RTC_STOP_PARAMETER + '=' + stop + '&'
+            + RTC_DIRECTION_PARAMETER + '=' + direction;
 
-    //        if (!json['arretNonDesservi']) {
-    //            return json['horaires'][0]['departMinutes'];
-    //        }
-    //        } else {
-    //            return 'N/A';
-    //        }
-    //});
+    log_message('RTC builded URL :' + url);
+
+    return url;
 }
 
 // This function should be moved in a common file
 function get_callback(session, message) {
     if (message.status_code == 200) {
-
+        let json_data = JSON.parse(message.response_body.data);
         transit_infos = {
-            line_number: '84',
-            stop_number: '1111',
+            line_number: json_data[RTC_LINE_KEY][RTC_LINE_PARAMETER],
+            stop_number: json_data[RTC_STOP_KEY][RTC_STOP_PARAMETER],
+            estimated_time: json_data[RTC_SCHEDULE_KEY][0][RTC_ESTIMATED_TIME],
             direction: 1,
             provider: 'RTC',
             updated_at: Date.now
         }
+        log_message(JSON.stringify(transit_infos));
     } else {
-        log.error("Request to transit service RTC not succesful");
+        log_message("Request to transit service RTC not succesful with code " + message.status_code);
     }
+}
+
+function log_message(message) {
+    global.log('[transitTracker@vinibo.net] : ' + message);
 }
