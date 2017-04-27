@@ -1,8 +1,8 @@
 const St = imports.gi.St;
 const Main = imports.ui.main;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const RTCTransit = Me.imports.rtcquebec;
-//const Tweener = imports.ui.tweener;
+const RTCTransit = Me.imports.providers.rtcquebec;
+const DummyTransit = Me.imports.providers.dummy;
 
 let button;
 let transitProvider;
@@ -13,11 +13,6 @@ let transitProvider;
 // Cache the result
 // Display result
 
-function _forceUpdate() {
-    
-    button.set_child(generateEstimateLabel('84', getEstimatedTime()));
-}
-
 function init() {
     button = new St.Bin({ style_class: 'panel-button',
                           reactive: true,
@@ -25,41 +20,43 @@ function init() {
                           x_fill: true,
                           y_fill: false,
                           track_hover: true });
-    
-    estimatedTime = getEstimatedTime();
 
-    // Two possibilities. 1. A click force refresh times 2. A click shows a popup with more lines (First option good for first impl)
-    button.set_child(generateEstimateLabel('84', estimatedTime));
+    init_transit_provider();
 
-    button.connect('button-press-event', _forceUpdate);
+    //button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(84,1,5167)));
+    button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(0,0,0)));
+
+    button.connect('button-press-event', forceUpdate);
+}
+
+function init_transit_provider() {
+    if (transitProvider == null) {
+        //transitProvider = DummyTransit;
+        transitProvider = RTCTransit;
+    }
 }
 
 function generateEstimateLabel(lineNumber, estimatedTime) {
+    // A  bus icon could be nice to have
     return new St.Label({ text: lineNumber + ' : ' + estimatedTime + ' min'});
 }
 
-function getEstimatedTime() {
-    let params = {
-        noParcours: 74,
-        noArret: 1125,
-        noDirection: 0
-    };
-    estimatedTime = RTCTransit.getEstimatedTime(84,1,5167);
-    //return rtcTransit.getEstimatedTime(84,1,5167);
-    // transitProvider.getEstimatedTime(84,1,5167);
-    return estimatedTime;
+function get_timer_refresh_rate(estimatedTimeLeft) {
+    let refresh_rate = 1800;
+
+    if (estimatedTimeLeft >= 15 ) {
+        refresh_rate = 300;
+    } else if (estimatedTimeLeft < 15 && estimatedTimeLeft >= 5) {
+        refresh_rate = 60;
+    } else if (estimatedTimeLeft < 5) {
+        refresh_rate = 30;
+    }
+
+    return refresh_rate;
 }
 
-function get_timer_refresh_rate(estimatedTimeLeft) {
-    if (estimatedTimeLeft >= 15 ) {
-        return 300;
-    } else if (estimatedTimeLeft < 15 && estimatedTimeLeft >= 5) {
-        return 60;
-    } else if (estimatedTimeLeft < 5) {
-        return 30;
-    } else {
-        return 1800;
-    }
+function forceUpdate() {
+    button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(0,0,0)));
 }
 
 function enable() {
