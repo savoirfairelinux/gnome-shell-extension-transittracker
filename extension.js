@@ -23,8 +23,8 @@ function init() {
 
     init_transit_provider();
 
-    //button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(84,1,5167)));
-    button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(0,0,0)));
+    button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(84,1,5167)));
+    //button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(0,0,0)));
 
     button.connect('button-press-event', forceUpdate);
 }
@@ -56,7 +56,7 @@ function get_timer_refresh_rate(estimatedTimeLeft) {
 }
 
 function forceUpdate() {
-    button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(0,0,0)));
+    button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(84,1,5167)));
 }
 
 function enable() {
