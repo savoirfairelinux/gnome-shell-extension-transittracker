@@ -19,24 +19,25 @@ const RTC_ESTIMATED_TIME = "departMinutes";
 // Dans la réponse du RTC, un flag ntr est présent sur les entrées de 'horaires'
 // ntr signifie : Nomade Temps Réel!
 
+// class RTCQuebec extends Provider
+
 let _session = new Soup.SessionAsync();
+let refresh_frontend_display;
 
-let transit_infos;
-
-function getEstimatedTime(line, direction, stop) {
-    return getData(84,1,5167);
+function getEstimatedTime(line, direction, stop, frontDisplayMethodCallback) {
+    refresh_frontend_display = frontDisplayMethodCallback;
+    return getData(line, direction, stop);
 }
 
 function getData(line, direction, stop) {
-    url = build_url(line, direction, stop);
+    let url = build_url(line, direction, stop);
     let request = Soup.Message.new('GET', url);
-    _session.queue_message(request, Lang.bind(this,get_callback));
+    _session.queue_message(request, format_response);
+}
 
-    if (transit_infos != null) {
-        return transit_infos.estimated_time;
-    } else {
-        return 'N/A';
-    }
+function requestUpdate(line, direction, stop) {
+    log_message("Forced update requested");
+    getData(line, direction, stop);
 }
 
 function build_url(line, direction, stop) {
@@ -53,21 +54,30 @@ function build_url(line, direction, stop) {
 }
 
 // This function should be moved in a common file
-function get_callback(session, message) {
+function format_response(session, message) {
+    let transit_infos;
+
     if (message.status_code == 200) {
         let json_data = JSON.parse(message.response_body.data);
+
         transit_infos = {
-            line_number: json_data[RTC_LINE_KEY][RTC_LINE_PARAMETER],
-            stop_number: json_data[RTC_STOP_KEY][RTC_STOP_PARAMETER],
-            estimated_time: json_data[RTC_SCHEDULE_KEY][0][RTC_ESTIMATED_TIME],
+            lineNumber: json_data[RTC_LINE_KEY][RTC_LINE_PARAMETER],
+            stopNumber: json_data[RTC_STOP_KEY][RTC_STOP_PARAMETER],
+            estimatedTime: json_data[RTC_SCHEDULE_KEY][0][RTC_ESTIMATED_TIME],
             direction: 1,
             provider: 'RTC',
-            updated_at: Date.now
+            updatedAt: Date.now
         }
         log_message(JSON.stringify(transit_infos));
-    } else {
+    } else if (message.status_code == 500) {
         log_message("Request to transit service RTC not succesful with code " + message.status_code);
+        transit_infos = {lineNumber: '??', estimatedTime: 'N/A'};
+    } else {
+        log_message("Unable to reach server when doing request ");
+        transit_infos = {lineNumber: '??', estimatedTime: 'N/A'};
     }
+
+    refresh_frontend_display(transit_infos);
 }
 
 function log_message(message) {
