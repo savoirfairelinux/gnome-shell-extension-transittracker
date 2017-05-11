@@ -1,4 +1,5 @@
 const St = imports.gi.St;
+const GLib = imports.gi.GLib;
 const Main = imports.ui.main;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const RTCTransit = Me.imports.providers.rtcquebec;
@@ -6,12 +7,6 @@ const DummyTransit = Me.imports.providers.dummy;
 
 let button;
 let transitProvider;
-
-// General workflow
-// Verify is preferences are set
-// Query service
-// Cache the result
-// Display result
 
 function init() {
     button = new St.Bin({ style_class: 'panel-button',
@@ -23,9 +18,7 @@ function init() {
 
     init_transit_provider();
 
-    button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(84,1,5167)));
-    //button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(0,0,0)));
-
+    transitProvider.getEstimatedTime(84,1,5167, updateDisplayedETA)
     button.connect('button-press-event', forceUpdate);
 }
 
@@ -36,27 +29,36 @@ function init_transit_provider() {
     }
 }
 
-function generateEstimateLabel(lineNumber, estimatedTime) {
-    // A  bus icon could be nice to have
-    return new St.Label({ text: lineNumber + ' : ' + estimatedTime + ' min'});
+
+function updateDisplayedETA(transitResponse) {
+    // Reset timer
+    let timer_rate = get_timer_refresh_rate(transitResponse.estimatedTime)
+    GLib.timeout_add(GLib.PRIORITY_DEFAULT, timer_rate, forceUpdate, null);
+
+    // A bus icon could be nice to have
+    let etaLabel = new St.Label({ text: transitResponse.lineNumber + ' : ' + transitResponse.estimatedTime + ' min'});
+    button.set_child(etaLabel);
 }
 
 function get_timer_refresh_rate(estimatedTimeLeft) {
-    let refresh_rate = 1800;
+    let refresh_rate = 900;    // 15 minutes
 
     if (estimatedTimeLeft >= 15 ) {
         refresh_rate = 300;
     } else if (estimatedTimeLeft < 15 && estimatedTimeLeft >= 5) {
         refresh_rate = 60;
-    } else if (estimatedTimeLeft < 5) {
+    } else if (estimatedTimeLeft < 5 || estimatedTimeLeft === 'N/A') {
+        // It could be a good idea to distiguish an error code from a network error.
         refresh_rate = 30;
     }
 
-    return refresh_rate;
+    log_message("Returned timer " + refresh_rate);
+    return refresh_rate * 1000;
 }
 
 function forceUpdate() {
-    button.set_child(generateEstimateLabel('84', transitProvider.getEstimatedTime(84,1,5167)));
+    // Force update require all parameters..
+    transitProvider.requestUpdate(84,1,5167);
 }
 
 function enable() {
