@@ -1,18 +1,23 @@
-let _refresh_frontend_display;
+let refresh_frontend_display;
+let watchedPoint;
 
 // Dummy provider used for debugging and example
-function getEstimatedTime(line, direction, stop, callback) {
-    _refresh_frontend_display = callback;
-    return getData(line, direction, stop, callback);
+function getEstimatedTime(receivedWatchedPoint, callback) {
+    refresh_frontend_display = callback;
+    watchedPoint = receivedWatchedPoint;
+    return getData(receivedWatchedPoint);
 }
 
-function getData(line, direction, stop) {
-    lineNumber = Math.round(Math.random() * 100);
-    eta = Math.round(Math.random() * 100);
-    global.log("Function getData on dummy called " + lineNumber + " " + eta);
-    _refresh_frontend_display({lineNumber: lineNumber, estimatedTime: eta});
+function getName() {
+    return "Dummy";
 }
 
-function requestUpdate(line, direction, stop) {
-    getData(line, direction, stop);
+function getData(watchedPoint) {
+    let eta = Math.round(Math.random() * 100);
+    global.log("Function getData on dummy called " + watchedPoint.line + " " + eta);
+    refresh_frontend_display({lineNumber: watchedPoint.line, estimatedTime: eta});
+}
+
+function requestUpdate() {
+    getData(watchedPoint);
 }

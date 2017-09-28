@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extension-transittracker">
+    <schema path="/org/gnome/shell/extensions/transittracker/" id="org.gnome.shell.extensions.transittracker">
+        <key name="watched-stops" type="as">
+            <default>['{\"provider\": \"Dummy\", \"line\": \"84\", \"direction\": \"0\", \"stop\": \"1111\"}']</default>
+            <summary>A complete string that define which stop of which provider on which line is being watched.
+		    The format is Provider, line-number, stop-number, direction-code.
+	    </summary>
+        </key>
+    </schema>
+</schemalist>

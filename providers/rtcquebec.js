@@ -19,34 +19,38 @@ const RTC_ESTIMATED_TIME = "departMinutes";
 // Dans la réponse du RTC, un flag ntr est présent sur les entrées de 'horaires'
 // ntr signifie : Nomade Temps Réel!
 
-// class RTCQuebec extends Provider
-
-let _session = new Soup.SessionAsync();
+let sesison = new Soup.SessionAsync();
 let refresh_frontend_display;
+let watchedPoint;
 
-function getEstimatedTime(line, direction, stop, frontDisplayMethodCallback) {
+function getName() {
+    return "RTC";
+}
+
+function getEstimatedTime(watchedPoint, frontDisplayMethodCallback) {
     refresh_frontend_display = frontDisplayMethodCallback;
-    return getData(line, direction, stop);
+    watchedPoint = watchedPoint;
+    return getData(watchedPoint);
 }
 
-function getData(line, direction, stop) {
-    let url = build_url(line, direction, stop);
-    let request = Soup.Message.new('GET', url);
-    _session.queue_message(request, format_response);
-}
-
-function requestUpdate(line, direction, stop) {
+function requestUpdate() {
     log_message("Forced update requested");
-    getData(line, direction, stop);
+    getData(watchedPoint);
 }
 
-function build_url(line, direction, stop) {
+function getData(watchedPoint) {
+    let url = build_url(watchedPoint);
+    let request = Soup.Message.new('GET', url);
+    sesison.queue_message(request, format_response);
+}
+
+function build_url(watchedPoint) {
     let url = BUS_CAN_QUE_RTC_URL + '?'
             // I tried to be honnest by sending the extension name, but the request got rejected
             + RTC_SOURCE_PARAMETER + '=' + 'siteMobile' + '&'
-            + RTC_LINE_PARAMETER + '=' + line + '&'
-            + RTC_STOP_PARAMETER + '=' + stop + '&'
-            + RTC_DIRECTION_PARAMETER + '=' + direction;
+            + RTC_LINE_PARAMETER + '=' + watchedPoint.line + '&'
+            + RTC_STOP_PARAMETER + '=' + watchedPoint.stop + '&'
+            + RTC_DIRECTION_PARAMETER + '=' + watchedPoint.direction;
 
     log_message('RTC builded URL :' + url);
 
