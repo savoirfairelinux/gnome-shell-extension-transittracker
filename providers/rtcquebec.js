@@ -1,5 +1,3 @@
-// Quebec's RTC provider
-
 const Lang = imports.lang;
 const Soup = imports.gi.Soup;
 
@@ -27,15 +25,15 @@ function getName() {
     return "RTC";
 }
 
-function getEstimatedTime(watchedPoint, frontDisplayMethodCallback) {
+function getEstimatedTime(trackedPoint, frontDisplayMethodCallback) {
     refresh_frontend_display = frontDisplayMethodCallback;
-    watchedPoint = watchedPoint;
-    return getData(watchedPoint);
+    this.watchedPoint = trackedPoint;
+    return getData(this.watchedPoint);
 }
 
 function requestUpdate() {
     log_message("Forced update requested");
-    getData(watchedPoint);
+    getData(this.watchedPoint);
 }
 
 function getData(watchedPoint) {
