@@ -2,5 +2,7 @@
 	"name": "TransitTracker",
 	"description": "Displays the remaining time before the bus passes",
 	"uuid": "transittracker@vinibo.net",
-	"shell-version": ["3.22.2"]
+	"shell-version": ["3.22", "3.24", "3.26"],
+	"version":"1",
+	"url": "https://gitlab.com/Vinibo/gnome-shell-extension-transittracker"
 }
